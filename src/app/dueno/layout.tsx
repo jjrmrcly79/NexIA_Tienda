@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 
 export default async function DuenoLayout({
@@ -8,14 +9,34 @@ export default async function DuenoLayout({
   children: React.ReactNode;
 }) {
   let userEmail: string | null = null;
+  let storeSlug: string | null = null;
 
-  if (process.env.NODE_ENV !== "development") {
+  if (process.env.NODE_ENV === "development") {
+    const devTenantId = process.env.DEV_TENANT_ID ?? "00000000-0000-0000-0000-000000000001";
+    const supabase = createAdminClient();
+    const { data: tenant } = await supabase
+      .schema("nexia_tienda")
+      .from("tenants")
+      .select("slug")
+      .eq("id", devTenantId)
+      .single();
+    storeSlug = tenant?.slug ?? null;
+  } else {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) redirect("/auth/login");
     userEmail = user.email ?? null;
+
+    const { data: ut } = await supabase
+      .schema("nexia_tienda")
+      .from("user_tenants")
+      .select("tenant_id, tenants ( slug )")
+      .eq("user_id", user.id)
+      .limit(1)
+      .single();
+    storeSlug = (ut?.tenants as { slug: string } | null)?.slug ?? null;
   }
 
   return (
@@ -34,6 +55,16 @@ export default async function DuenoLayout({
           <NavLink href="/dueno/productos" icon="📦">Productos</NavLink>
           <NavLink href="/dueno/csv" icon="📁">Carga CSV</NavLink>
           <NavLink href="/dueno/equipo" icon="👥">Equipo</NavLink>
+          {storeSlug && (
+            <Link
+              href={`/tienda/${storeSlug}`}
+              target="_blank"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              <span>🛍️</span>
+              Ver mi tienda
+            </Link>
+          )}
         </nav>
         <div className="p-3 border-t border-gray-200">
           <form action="/auth/logout" method="post">
