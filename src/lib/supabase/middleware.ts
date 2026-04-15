@@ -4,8 +4,8 @@ import type { UserRole } from "@/types/database.types";
 
 const PROTECTED_PREFIXES: { prefix: string; roles: UserRole[] }[] = [
   { prefix: "/vendedor", roles: ["vendedor", "dueno", "administrador"] },
-  { prefix: "/dueno",    roles: ["dueno", "administrador"] },
-  { prefix: "/admin",    roles: ["administrador"] },
+  { prefix: "/dueno", roles: ["dueno", "administrador"] },
+  { prefix: "/admin", roles: ["administrador"] },
 ];
 
 export async function updateSession(request: NextRequest) {
@@ -39,7 +39,8 @@ export async function updateSession(request: NextRequest) {
   if (process.env.NODE_ENV === "development") {
     if (isAuthRoute) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dueno/analytics";
+      const devRole = (process.env.DEV_ROLE ?? "dueno") as UserRole;
+      url.pathname = roleHomePath(devRole);
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
@@ -100,10 +101,10 @@ export async function updateSession(request: NextRequest) {
 function roleHomePath(role: UserRole | undefined): string {
   switch (role) {
     case "administrador": return "/admin";
-    case "dueno":         return "/dueno/analytics";
-    case "vendedor":      return "/vendedor";
-    case "cliente":       return "/tienda";
-    default:              return "/auth/login";
+    case "dueno": return "/dueno/analytics";
+    case "vendedor": return "/vendedor";
+    case "cliente": return "/tienda";
+    default: return "/auth/login";
   }
 }
 

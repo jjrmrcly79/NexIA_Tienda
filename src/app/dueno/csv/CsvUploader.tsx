@@ -135,14 +135,33 @@ export default function CsvUploader({ tenantId }: { tenantId: string }) {
 
         // Actualizar inventario si se especificó stock
         if (row.stock !== undefined) {
-          await supabase
+          const { data: existingInv } = await supabase
             .schema("nexia_tienda")
             .from("inventory")
-            .update({
-              stock: parseInt(row.stock ?? "0"),
-              low_stock_threshold: parseInt(row.low_stock_threshold ?? "5"),
-            })
-            .eq("product_id", existing.id);
+            .select("id")
+            .eq("product_id", existing.id)
+            .single();
+
+          if (existingInv) {
+            await supabase
+              .schema("nexia_tienda")
+              .from("inventory")
+              .update({
+                stock: parseInt(row.stock ?? "0"),
+                low_stock_threshold: parseInt(row.low_stock_threshold ?? "5"),
+              })
+              .eq("product_id", existing.id);
+          } else {
+            await supabase
+              .schema("nexia_tienda")
+              .from("inventory")
+              .insert({
+                product_id: existing.id,
+                tenant_id: tenantId,
+                stock: parseInt(row.stock ?? "0"),
+                low_stock_threshold: parseInt(row.low_stock_threshold ?? "5"),
+              });
+          }
         }
         res.updated++;
       } else {

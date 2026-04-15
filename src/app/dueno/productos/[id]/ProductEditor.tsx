@@ -144,7 +144,8 @@ export default function ProductEditor({
       }
 
       // Actualizar inventario
-      if (product?.inventory?.[0]?.id) {
+      const inventoryId = product?.inventory?.[0]?.id;
+      if (inventoryId) {
         await supabase
           .schema("nexia_tienda")
           .from("inventory")
@@ -152,7 +153,18 @@ export default function ProductEditor({
             stock: parseInt(form.stock),
             low_stock_threshold: parseInt(form.low_stock_threshold),
           })
-          .eq("id", product.inventory[0].id);
+          .eq("id", inventoryId);
+      } else {
+        // No existe registro de inventario para este producto, crearlo
+        await supabase
+          .schema("nexia_tienda")
+          .from("inventory")
+          .insert({
+            product_id: product!.id,
+            tenant_id: tenantId,
+            stock: parseInt(form.stock),
+            low_stock_threshold: parseInt(form.low_stock_threshold),
+          });
       }
     }
 
