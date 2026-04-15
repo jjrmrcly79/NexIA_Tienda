@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { pathname } = request.nextUrl;
-  const isAuthRoute = pathname.startsWith("/auth");
+  const isAuthRoute = pathname.startsWith("/auth") || pathname === "/";
 
   // En desarrollo se omite la verificación de sesión
   if (process.env.NODE_ENV === "development") {
@@ -62,36 +62,35 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Verificar rol del usuario
-    const { data: ut } = await supabase
+    // Obtener todos los roles del usuario (puede tener varios tenants)
+    const { data: uts } = await supabase
       .schema("nexia_tienda")
       .from("user_tenants")
       .select("role")
-      .eq("user_id", user.id)
-      .limit(1)
-      .single();
+      .eq("user_id", user.id);
 
-    const role = ut?.role as UserRole | undefined;
+    const roles = (uts ?? []).map((r) => r.role as UserRole);
+    const topRole = topPriorityRole(roles);
 
-    if (!role || !protectedMatch.roles.includes(role)) {
-      // Redirigir al panel que le corresponde según su rol
+    if (!roles.some((r) => protectedMatch.roles.includes(r))) {
+      // No tiene ningún rol que permita esta ruta
       const url = request.nextUrl.clone();
-      url.pathname = roleHomePath(role);
+      url.pathname = roleHomePath(topRole);
       return NextResponse.redirect(url);
     }
   }
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    // Obtener rol para redirigir al panel correcto
-    const { data: ut } = await supabase
+    // Obtener todos los roles para redirigir al panel correcto
+    const { data: uts } = await supabase
       .schema("nexia_tienda")
       .from("user_tenants")
       .select("role")
-      .eq("user_id", user.id)
-      .limit(1)
-      .single();
-    url.pathname = roleHomePath(ut?.role as UserRole | undefined);
+      .eq("user_id", user.id);
+
+    const roles = (uts ?? []).map((r) => r.role as UserRole);
+    url.pathname = roleHomePath(topPriorityRole(roles));
     return NextResponse.redirect(url);
   }
 
@@ -106,4 +105,15 @@ function roleHomePath(role: UserRole | undefined): string {
     case "cliente":       return "/tienda";
     default:              return "/auth/login";
   }
+}
+
+// Devuelve el rol de mayor prioridad de una lista.
+// Un usuario puede tener varios roles en distintos tenants.
+const ROLE_PRIORITY: UserRole[] = ["administrador", "dueno", "vendedor", "cliente"];
+
+function topPriorityRole(roles: UserRole[]): UserRole | undefined {
+  for (const r of ROLE_PRIORITY) {
+    if (roles.includes(r)) return r;
+  }
+  return undefined;
 }

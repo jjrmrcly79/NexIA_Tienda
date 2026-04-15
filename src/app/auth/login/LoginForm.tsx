@@ -28,7 +28,7 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/dueno/analytics");
+    router.push("/");
     router.refresh();
   }
 

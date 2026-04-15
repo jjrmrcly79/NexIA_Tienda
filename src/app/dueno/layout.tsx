@@ -33,6 +33,7 @@ export default async function DuenoLayout({
           <NavLink href="/dueno/analytics" icon="📊">Analytics</NavLink>
           <NavLink href="/dueno/productos" icon="📦">Productos</NavLink>
           <NavLink href="/dueno/csv" icon="📁">Carga CSV</NavLink>
+          <NavLink href="/dueno/equipo" icon="👥">Equipo</NavLink>
         </nav>
         <div className="p-3 border-t border-gray-200">
           <form action="/auth/logout" method="post">
