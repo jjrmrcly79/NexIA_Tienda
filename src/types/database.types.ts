@@ -165,6 +165,57 @@ export interface Database {
           unit_price?: number;
         };
       };
+      invitations: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          email: string;
+          role: string;
+          invited_by: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          email: string;
+          role: string;
+          invited_by?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          status?: string;
+        };
+      };
+      removal_requests: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          requested_by: string;
+          invitation_id: string | null;
+          target_email: string;
+          reason: string | null;
+          status: string;
+          processed_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          requested_by: string;
+          invitation_id?: string | null;
+          target_email: string;
+          reason?: string | null;
+          status?: string;
+          processed_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: string;
+          processed_by?: string | null;
+        };
+      };
       user_tenants: {
         Row: {
           user_id: string;

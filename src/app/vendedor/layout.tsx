@@ -32,6 +32,7 @@ export default async function VendedorLayout({
         <nav className="flex-1 p-3 space-y-1">
           <NavLink href="/vendedor" icon="🛒">Pedidos</NavLink>
           <NavLink href="/vendedor/calculadora" icon="🧮">Calculadora POS</NavLink>
+          <NavLink href="/vendedor/mis-clientes" icon="👥">Mis clientes</NavLink>
         </nav>
         <div className="p-3 border-t border-gray-200">
           <form action="/auth/logout" method="post">
