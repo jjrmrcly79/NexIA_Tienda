@@ -100,7 +100,8 @@ export default function RegistroPage() {
       email: form.email,
       password: form.password,
       options: {
-        data: { full_name: form.ownerName || form.storeName },
+        // app = marcador de origen (estándar Nexia) — informativo, no controla acceso
+        data: { full_name: form.ownerName || form.storeName, app: "tienda" },
       },
     });
 
